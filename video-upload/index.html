@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ショート動画アップロードのお願い</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Sans', 'ヒラギノ角ゴシック', 'Yu Gothic UI', 'Meiryo UI', sans-serif;
+            background: linear-gradient(135deg, #f5f3f0 0%, #e8f5e8 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+            color: #4a5568;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-area {
+            width: 140px;
+            height: 90px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border-radius: 40px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            position: relative;
+            line-height: 1.3;
+        }
+        
+        .logo-area::before {
+            content: '🌱';
+            position: absolute;
+            top: -5px;
+            right: 10px;
+            font-size: 24px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .feature-tag {
+            background: #e6f3e6;
+            color: #2f855a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .required {
+            color: #e53e3e;
+            font-size: 12px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #81c784;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(129, 199, 132, 0.1);
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-area.dragover {
+            border-color: #81c784;
+            background: #f0fff4;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #a0aec0;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            color: #4a5568;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            background: #e6f3e6;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #2f855a;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            font-size: 14px;
+            color: #68d391;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #81c784, #66bb6a);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(129, 199, 132, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .thanks-screen {
+            display: none;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 50px 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .thanks-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .thanks-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .thanks-message {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 25px;
+        }
+
+        .instagram-info {
+            background: #fef5e7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .instagram-title {
+            font-weight: 600;
+            color: #744210;
+            margin-bottom: 8px;
+        }
+
+        .instagram-text {
+            font-size: 14px;
+            color: #975a16;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                padding: 25px 15px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .form-container {
+                padding: 25px 20px;
+            }
+            
+            .upload-area {
+                padding: 30px 15px;
+            }
+        }
+
+        .error-message {
+            color: #e53e3e;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #81c784, #66bb6a);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-area">姫路の種＆<br>ブドウちゃん</div>
+            <h1 class="title">ショート動画アップロードのお願い</h1>
+            <p class="subtitle">
+                ショート動画投稿用に使わせていただくため、<strong>5〜10秒程度</strong>のスマホで撮影した動画をご提供いただけますと幸いです😊<br>
+                <small style="color: #68d391; font-weight: 600;">📁 アップロードされた動画は「姫路の種＆ブドウちゃん」専用のGoogle Driveに安全に保存されます</small>
+            </p>
+            <div class="features">
+                <span class="feature-tag">✅ 最大5動画まで</span>
+                <span class="feature-tag">✅ 5〜10秒程度</span>
+                <span class="feature-tag">✅ 高画質保存</span>
+            </div>
+        </div>
+
+        <form id="uploadForm" class="form-container">
+            <div class="form-group">
+                <label class="form-label">
+                    お店の名前 <span class="required">*必須</span>
+                </label>
+                <input type="text" class="form-input" id="userName" name="userName" placeholder="店舗名・担当者名をご入力ください" required>
+                <div class="error-message" id="userNameError">お店の名前を入力してください</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    動画の説明 <span class="required">*必須</span>
+                </label>
+                <textarea class="form-input" id="videoDescription" name="videoDescription" rows="4" placeholder="例）店内の様子、おすすめメニュー（メニュー名）" required></textarea>
+                <div class="error-message" id="videoDescriptionError">動画の説明を入力してください</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    ショート動画素材 <span class="required">*必須</span> <span style="font-size: 12px; color: #68d391;">(最大5動画まで)</span>
+                </label>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🎬</div>
+                    <div class="upload-text">ここに動画ファイルをドロップ</div>
+                    <div class="upload-subtext">またはクリックしてファイルを選択</div>
+                    <div class="upload-subtext" style="font-size: 12px; color: #a0aec0;">
+                        📱 ショート動画: 5〜10秒程度<br>
+                        🎞️ 対応形式: MP4, MOV (1動画200MBまで)
+                    </div>
+                </div>
+                <input type="file" class="file-input" id="videoFile" name="videoFile" accept="video/*" multiple required>
+                
+                <div id="filesList" style="margin-top: 15px;"></div>
+                
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="error-message" id="videoFileError">動画ファイルを選択してください</div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                🎬 ショート動画をアップロードする
+            </button>
+        </form>
+
+        <div class="thanks-screen" id="thanksScreen">
+            <div class="thanks-icon">🎉</div>
+            <h2 class="thanks-title">ありがとうございます！</h2>
+            <p class="thanks-message">
+                ショート動画のアップロードが完了しました。<br>
+                <strong style="color: #2f855a;">📁 「姫路の種＆ブドウちゃん」のGoogle Driveに保存されました</strong><br>
+                確認後、ご連絡いたします📩
+            </p>
+            
+            <div class="instagram-info">
+                <div class="instagram-title">📸 Instagram投稿時のお願い</div>
+                <div class="instagram-text">
+                    投稿の際は、よろしければタグ付けをお願いいたします✨<br>
+                    （任意です）
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google APIs Client Library -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+        // Google Drive API 設定
+        const API_KEY = 'AIzaSyCH2IAbtvQI0ONUv43HvHvnCLiwiSi5iwg';
+        const CLIENT_ID = '512329280979-o3762jl3r2taaa81k12ac8u00hv2qqhd.apps.googleusercontent.com';
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        
+        let gapi;
+        let googleAuth;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('videoFile');
+        const form = document.getElementById('uploadForm');
+        const thanksScreen = document.getElementById('thanksScreen');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+
+        // Google API初期化
+        async function initializeGapi() {
+            await new Promise(resolve => {
+                if (typeof window.gapi !== 'undefined') {
+                    resolve();
+                } else {
+                    window.addEventListener('load', resolve);
+                }
+            });
+            
+            await window.gapi.load('auth2', async () => {
+                await window.gapi.auth2.init({
+                    client_id: CLIENT_ID,
+                });
+                googleAuth = window.gapi.auth2.getAuthInstance();
+            });
+            
+            await window.gapi.load('client', async () => {
+                await window.gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: [DISCOVERY_DOC],
+                });
+            });
+        }
+
+        // Google Drive認証
+        async function authenticateGoogleDrive() {
+            if (!googleAuth.isSignedIn.get()) {
+                await googleAuth.signIn();
+            }
+            return googleAuth.currentUser.get().getAuthResponse().access_token;
+        }
+
+        // Google Driveにファイルアップロード
+        async function uploadToGoogleDrive(file, accessToken, onProgress) {
+            const metadata = {
+                name: `${new Date().getTime()}_${file.name}`,
+                parents: ['1XFU7kni7SCMyYmVR_XjqWJ7aH8wv4v0E']
+            };
+
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+            form.append('file', file);
+
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        onProgress(percentComplete);
+                    }
+                });
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        reject(new Error('Upload failed'));
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error('Upload failed'));
+
+                xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+                xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+                xhr.send(form);
+            });
+        }
+
+        // ファイルサイズを読みやすい形式に変換
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 複数ファイル情報を表示
+        function displayMultipleFiles(files) {
+            const filesList = document.getElementById('filesList');
+            filesList.innerHTML = '';
+            
+            let hasError = false;
+            const maxFileSize = 200 * 1024 * 1024; // 200MB
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-info';
+                fileItem.style.display = 'block';
+                fileItem.style.marginBottom = '10px';
+                
+                let statusIcon = '✅';
+                let statusColor = '#2f855a';
+                let errorMsg = '';
+                
+                // ファイルサイズチェック
+                if (file.size > maxFileSize) {
+                    statusIcon = '❌';
+                    statusColor = '#e53e3e';
+                    errorMsg = ' (200MBを超えています)';
+                    hasError = true;
+                }
+                
+                fileItem.innerHTML = `
+                    <div class="file-name" style="color: ${statusColor};">
+                        ${statusIcon} ${file.name}${errorMsg}
+                    </div>
+                    <div class="file-size" style="color: ${statusColor};">
+                        ${formatFileSize(file.size)}
+                    </div>
+                `;
+                
+                filesList.appendChild(fileItem);
+            }
+            
+            // 5動画制限チェック
+            if (files.length > 5) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.color = '#e53e3e';
+                errorDiv.style.fontSize = '14px';
+                errorDiv.style.marginTop = '10px';
+                errorDiv.textContent = '⚠️ 動画は5つまでしか選択できません';
+                filesList.appendChild(errorDiv);
+                hasError = true;
+            }
+            
+            if (hasError) {
+                document.getElementById('videoFileError').textContent = 'ファイルサイズまたは個数に問題があります';
+                document.getElementById('videoFileError').style.display = 'block';
+                return false;
+            } else {
+                document.getElementById('videoFileError').style.display = 'none';
+                return true;
+            }
+        }
+
+        // ドラッグ&ドロップ機能
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('video/'));
+            
+            if (files.length > 0) {
+                // 最大5動画まで
+                const selectedFiles = files.slice(0, 5);
+                
+                // FileListオブジェクトを作成
+                const dt = new DataTransfer();
+                selectedFiles.forEach(file => dt.items.add(file));
+                fileInput.files = dt.files;
+                
+                displayMultipleFiles(selectedFiles);
+            } else {
+                alert('動画ファイルを選択してください');
+            }
+        });
+
+        // クリックでファイル選択
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // ファイル選択時の処理
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const files = Array.from(e.target.files).slice(0, 5); // 最大5動画
+                displayMultipleFiles(files);
+            }
+        });
+
+        // フォーム送信処理
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // バリデーション
+            let isValid = true;
+            const userName = document.getElementById('userName');
+            const videoDescription = document.getElementById('videoDescription');
+            const videoFile = document.getElementById('videoFile');
+            
+            // 各フィールドのエラーメッセージをリセット
+            document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+            
+            if (!userName.value.trim()) {
+                document.getElementById('userNameError').style.display = 'block';
+                isValid = false;
+            }
+            
+            if (!videoDescription.value.trim()) {
+                document.getElementById('videoDescriptionError').style.display = 'block';
+                isValid = false;
+            }
+            
+            if (!videoFile.files.length) {
+                document.getElementById('videoFileError').textContent = '動画ファイルを選択してください';
+                document.getElementById('videoFileError').style.display = 'block';
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            try {
+                // Google Drive API初期化
+                await initializeGapi();
+                
+                // アップロード処理開始
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Google Driveに接続中...';
+                
+                // Google Drive認証
+                const accessToken = await authenticateGoogleDrive();
+                
+                submitBtn.textContent = 'アップロード中...';
+                progressBar.style.display = 'block';
+                
+                // Google Driveにアップロード
+                const uploadResult = await uploadToGoogleDrive(
+                    videoFile.files[0], 
+                    accessToken,
+                    (progress) => {
+                        progressFill.style.width = progress + '%';
+                    }
+                );
+                
+                // アップロード完了
+                progressFill.style.width = '100%';
+                
+                // フォームデータをスプレッドシートに保存（オプション）
+                const formData = {
+                    userName: userName.value,
+                    videoDescription: videoDescription.value,
+                    fileName: videoFile.files[0].name,
+                    fileSize: formatFileSize(videoFile.files[0].size),
+                    googleDriveFileId: uploadResult.id,
+                    uploadTime: new Date().toISOString()
+                };
+                
+                console.log('アップロード完了:', formData);
+                
+                setTimeout(() => {
+                    form.style.display = 'none';
+                    thanksScreen.style.display = 'block';
+                }, 500);
+                
+            } catch (error) {
+                console.error('アップロードエラー:', error);
+                alert('アップロードに失敗しました。もう一度お試しください。');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🎬 ショート動画をアップロードする';
+                progressBar.style.display = 'none';
+            }
+        });
+
+        // ページ読み込み時にGoogle API初期化
+        window.addEventListener('load', () => {
+            initializeGapi().catch(console.error);
+        });
+    </script>
+</body>
+</html>
