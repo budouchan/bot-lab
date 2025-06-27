@@ -701,22 +701,26 @@
                 }, 500);
                 
             } catch (error) {
-                // この2行を書き換える
-                console.error('詳細なアップロードエラー:', JSON.stringify(error, null, 2));
+                console.error('アップロードエラーの詳細:', error); // エラー全体をコンソールに出力
+
+                let errorMessage = '不明なエラーです。'; // デフォルトのエラーメッセージ
                 
-                let errorMessage = 'もう一度お試しください。';
-                try {
-                    if (error.result && error.result.error && error.result.error.message) {
-                        errorMessage = JSON.stringify(error.result.error.message);
-                    } else if (error.message) {
-                        errorMessage = error.message;
+                // エラーの形を安全にチェックして、メッセージを取り出す
+                if (error && error.result && error.result.error && error.result.error.message) {
+                    errorMessage = error.result.error.message;
+                } else if (error && error.message) {
+                    errorMessage = error.message;
+                } else {
+                    try {
+                        errorMessage = JSON.stringify(error);
+                    } catch (e) {
+                        errorMessage = 'エラーオブジェクトを文字列に変換できませんでした。';
                     }
-                } catch (e) {
-                    errorMessage = error.toString();
                 }
-                
-                alert('アップロードに失敗しました。エラー内容：' + errorMessage);
-                
+
+                // ユーザーに見やすい形でエラー内容を通知
+                alert('アップロードに失敗しました。\n\n■エラー内容■\n' + errorMessage);
+
                 submitBtn.disabled = false;
                 submitBtn.textContent = '🎬 ショート動画をアップロードする';
                 progressBar.style.display = 'none';
