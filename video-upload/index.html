@@ -410,35 +410,48 @@
 
         // Google API初期化
         async function initializeGapi() {
-            await new Promise(resolve => {
-                if (typeof window.gapi !== 'undefined') {
-                    resolve();
-                } else {
-                    window.addEventListener('load', resolve);
+            return new Promise((resolve, reject) => {
+                // gapi が既に読み込まれているかチェック
+                if (typeof window.gapi === 'undefined') {
+                    reject(new Error('Google API が読み込まれていません'));
+                    return;
                 }
-            });
-            
-            await window.gapi.load('auth2', async () => {
-                await window.gapi.auth2.init({
-                    client_id: CLIENT_ID,
-                });
-                googleAuth = window.gapi.auth2.getAuthInstance();
-            });
-            
-            await window.gapi.load('client', async () => {
-                await window.gapi.client.init({
-                    apiKey: API_KEY,
-                    discoveryDocs: [DISCOVERY_DOC],
+                
+                window.gapi.load('auth2', () => {
+                    window.gapi.auth2.init({
+                        client_id: CLIENT_ID,
+                    }).then(() => {
+                        googleAuth = window.gapi.auth2.getAuthInstance();
+                        
+                        window.gapi.load('client', () => {
+                            window.gapi.client.init({
+                                apiKey: API_KEY,
+                                discoveryDocs: [DISCOVERY_DOC],
+                            }).then(() => {
+                                resolve();
+                            }).catch(reject);
+                        });
+                    }).catch(reject);
                 });
             });
         }
 
         // Google Drive認証
         async function authenticateGoogleDrive() {
+            if (!googleAuth) {
+                throw new Error('Google認証が初期化されていません');
+            }
+            
             if (!googleAuth.isSignedIn.get()) {
                 await googleAuth.signIn();
             }
-            return googleAuth.currentUser.get().getAuthResponse().access_token;
+            
+            const currentUser = googleAuth.currentUser.get();
+            if (!currentUser) {
+                throw new Error('ユーザー認証に失敗しました');
+            }
+            
+            return currentUser.getAuthResponse().access_token;
         }
 
         // Google Driveにファイルアップロード
@@ -636,14 +649,25 @@
                 submitBtn.textContent = 'アップロード中...';
                 progressBar.style.display = 'block';
                 
-                // Google Driveにアップロード
-                const uploadResult = await uploadToGoogleDrive(
-                    videoFile.files[0], 
-                    accessToken,
-                    (progress) => {
-                        progressFill.style.width = progress + '%';
-                    }
-                );
+                // 複数ファイルのアップロード処理
+                const uploadResults = [];
+                const totalFiles = videoFile.files.length;
+                
+                for (let i = 0; i < totalFiles; i++) {
+                    const file = videoFile.files[i];
+                    submitBtn.textContent = `アップロード中... (${i + 1}/${totalFiles})`;
+                    
+                    const uploadResult = await uploadToGoogleDrive(
+                        file, 
+                        accessToken,
+                        (progress) => {
+                            const overallProgress = ((i / totalFiles) + (progress / 100 / totalFiles)) * 100;
+                            progressFill.style.width = overallProgress + '%';
+                        }
+                    );
+                    
+                    uploadResults.push(uploadResult);
+                }
                 
                 // アップロード完了
                 progressFill.style.width = '100%';
@@ -652,9 +676,11 @@
                 const formData = {
                     userName: userName.value,
                     videoDescription: videoDescription.value,
-                    fileName: videoFile.files[0].name,
-                    fileSize: formatFileSize(videoFile.files[0].size),
-                    googleDriveFileId: uploadResult.id,
+                    files: uploadResults.map((result, index) => ({
+                        fileName: videoFile.files[index].name,
+                        fileSize: formatFileSize(videoFile.files[index].size),
+                        googleDriveFileId: result.id
+                    })),
                     uploadTime: new Date().toISOString()
                 };
                 
