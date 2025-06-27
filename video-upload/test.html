@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive API テスト</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Google Drive API テスト</h1>
+    <div id="status"></div>
+    
+    <button onclick="testAPI()">API接続テスト</button>
+    <button onclick="testAuth()">認証テスト</button>
+    
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    <script>
+        const API_KEY = 'AIzaSyCH2IAbtvQI0ONUv43HvHvnCLiwiSi5iwg';
+        const CLIENT_ID = '512329280979-o3762jl3r2taaa81k12ac8u00hv2qqhd.apps.googleusercontent.com';
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        
+        let gapiInited = false;
+        let gisInited = false;
+        let tokenClient;
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            statusDiv.appendChild(div);
+            console.log(message);
+        }
+
+        async function gapiLoaded() {
+            updateStatus('GAPI ライブラリ読み込み完了');
+            await gapi.load('client', initializeGapiClient);
+        }
+        
+        async function gisLoaded() {
+            updateStatus('GIS ライブラリ読み込み完了');
+            try {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: (resp) => {
+                        if (resp.error !== undefined) {
+                            updateStatus(`認証エラー: ${resp.error}`, 'error');
+                        } else {
+                            updateStatus('認証成功！', 'success');
+                        }
+                    },
+                });
+                gisInited = true;
+                updateStatus('GIS 初期化完了', 'success');
+            } catch (error) {
+                updateStatus(`GIS 初期化エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        async function initializeGapiClient() {
+            try {
+                await gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: [DISCOVERY_DOC],
+                });
+                gapiInited = true;
+                updateStatus('GAPI クライアント初期化完了', 'success');
+            } catch (error) {
+                updateStatus(`GAPI 初期化エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        function testAPI() {
+            updateStatus(`API状態: GAPI=${gapiInited}, GIS=${gisInited}`);
+            if (gapiInited && gisInited) {
+                updateStatus('✅ 全API初期化完了', 'success');
+            } else {
+                updateStatus('❌ API初期化未完了', 'error');
+            }
+        }
+        
+        function testAuth() {
+            if (!gisInited) {
+                updateStatus('GISが初期化されていません', 'error');
+                return;
+            }
+            
+            updateStatus('認証開始...');
+            tokenClient.requestAccessToken({prompt: 'consent'});
+        }
+    </script>
+</body>
+</html>
