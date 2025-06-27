@@ -389,7 +389,8 @@
     </div>
 
     <!-- Google APIs Client Library -->
-    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
     <script>
         // Google Drive API 設定
         const API_KEY = 'AIzaSyCH2IAbtvQI0ONUv43HvHvnCLiwiSi5iwg';
@@ -397,8 +398,9 @@
         const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
         
-        let gapi;
-        let googleAuth;
+        let gapiInited = false;
+        let gisInited = false;
+        let tokenClient;
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('videoFile');
@@ -408,50 +410,55 @@
         const progressBar = document.getElementById('progressBar');
         const progressFill = document.getElementById('progressFill');
 
-        // Google API初期化
-        async function initializeGapi() {
-            return new Promise((resolve, reject) => {
-                // gapi が既に読み込まれているかチェック
-                if (typeof window.gapi === 'undefined') {
-                    reject(new Error('Google API が読み込まれていません'));
-                    return;
-                }
-                
-                window.gapi.load('auth2', () => {
-                    window.gapi.auth2.init({
-                        client_id: CLIENT_ID,
-                    }).then(() => {
-                        googleAuth = window.gapi.auth2.getAuthInstance();
-                        
-                        window.gapi.load('client', () => {
-                            window.gapi.client.init({
-                                apiKey: API_KEY,
-                                discoveryDocs: [DISCOVERY_DOC],
-                            }).then(() => {
-                                resolve();
-                            }).catch(reject);
-                        });
-                    }).catch(reject);
-                });
-            });
+        // GAPI callback
+        async function gapiLoaded() {
+            await gapi.load('client', initializeGapiClient);
         }
-
-        // Google Drive認証
-        async function authenticateGoogleDrive() {
-            if (!googleAuth) {
-                throw new Error('Google認証が初期化されていません');
+        
+        // GIS callback
+        async function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // defined later
+            });
+            gisInited = true;
+            maybeEnableButtons();
+        }
+        
+        // Initialize GAPI client
+        async function initializeGapiClient() {
+            await gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: [DISCOVERY_DOC],
+            });
+            gapiInited = true;
+            maybeEnableButtons();
+        }
+        
+        // Enable buttons after API libraries load
+        function maybeEnableButtons() {
+            if (gapiInited && gisInited) {
+                console.log('Google APIs loaded successfully');
             }
-            
-            if (!googleAuth.isSignedIn.get()) {
-                await googleAuth.signIn();
-            }
-            
-            const currentUser = googleAuth.currentUser.get();
-            if (!currentUser) {
-                throw new Error('ユーザー認証に失敗しました');
-            }
-            
-            return currentUser.getAuthResponse().access_token;
+        }
+        
+        // Get access token
+        async function getAccessToken() {
+            return new Promise((resolve, reject) => {
+                tokenClient.callback = async (resp) => {
+                    if (resp.error !== undefined) {
+                        reject(resp);
+                    }
+                    resolve(resp.access_token);
+                };
+                
+                if (gapi.client.getToken() === null) {
+                    tokenClient.requestAccessToken({prompt: 'consent'});
+                } else {
+                    tokenClient.requestAccessToken({prompt: ''});
+                }
+            });
         }
 
         // Google Driveにファイルアップロード
@@ -636,15 +643,17 @@
             if (!isValid) return;
 
             try {
-                // Google Drive API初期化
-                await initializeGapi();
+                // Google APIの初期化チェック
+                if (!gapiInited || !gisInited) {
+                    throw new Error('Google APIが初期化されていません');
+                }
                 
                 // アップロード処理開始
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Google Driveに接続中...';
                 
                 // Google Drive認証
-                const accessToken = await authenticateGoogleDrive();
+                const accessToken = await getAccessToken();
                 
                 submitBtn.textContent = 'アップロード中...';
                 progressBar.style.display = 'block';
@@ -700,9 +709,9 @@
             }
         });
 
-        // ページ読み込み時にGoogle API初期化
+        // ページ読み込み完了
         window.addEventListener('load', () => {
-            initializeGapi().catch(console.error);
+            console.log('ページ読み込み完了');
         });
     </script>
 </body>
