@@ -701,8 +701,22 @@
                 }, 500);
                 
             } catch (error) {
-                console.error('アップロードエラー:', error);
-                alert('アップロードに失敗しました。もう一度お試しください。');
+                // この2行を書き換える
+                console.error('詳細なアップロードエラー:', JSON.stringify(error, null, 2));
+                
+                let errorMessage = 'もう一度お試しください。';
+                try {
+                    if (error.result && error.result.error && error.result.error.message) {
+                        errorMessage = JSON.stringify(error.result.error.message);
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    }
+                } catch (e) {
+                    errorMessage = error.toString();
+                }
+                
+                alert('アップロードに失敗しました。エラー内容：' + errorMessage);
+                
                 submitBtn.disabled = false;
                 submitBtn.textContent = '🎬 ショート動画をアップロードする';
                 progressBar.style.display = 'none';
